@@ -5,8 +5,8 @@ import { ENV } from '../lib/env.js';
 import cors from 'cors';
 import { serve } from "inngest/express";
 import { inngest, functions } from '../lib/inngest.js';
-import {clerkMiddleware} from "@clerk/express";
-import chatRoutes from './routes/chatRoutes.js';
+import { clerkMiddleware } from "@clerk/express";
+import chatRoutes from '../routes/chatRoutes.js';
 const app = express();
 
 const __dirname = path.resolve();
