@@ -1,6 +1,5 @@
-import {StreamChat} from "stream-chat";
-import {ENV} from "./env.js";
-
+import { StreamChat } from "stream-chat";
+import { ENV } from "./env.js";
 const apikey = ENV.STREAM_API_KEY;
 const apisecret = ENV.STREAM_API_SECRET;
 
@@ -9,10 +8,11 @@ if (!apikey || !apisecret) {
     process.exit(1);
 }
 
+export const streamClient = new StreamChat(apikey, apisecret);
 export const chatClient = new StreamChat(apikey, apisecret);
 
 export const upsertStreamUser = async (userData) => {
-    try{
+    try {
         await chatClient.upsertUser(userData);
         return userData;
     } catch (error) {
@@ -22,7 +22,7 @@ export const upsertStreamUser = async (userData) => {
 }
 
 export const deleteStreamUser = async (userId) => {
-    try{
+    try {
         await chatClient.deleteUser(userId);
         console.log(`Deleted Stream user with ID: ${userId}`);
     } catch (error) {
