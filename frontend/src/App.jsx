@@ -1,15 +1,17 @@
-import { Show, SignInButton, SignOutButton ,UserButton} from '@clerk/react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useUser } from '@clerk/react';
+import HomePage from './pages/HomePage';
+import ProblemsPage from './pages/ProblemsPage';
+import { Toaster } from 'react-hot-toast';
 function App() {
+  const { isSignedIn } = useUser();
   return (
     <>
-      <h1>Welcome to the APP</h1>
-      <Show when="signed-out">
-        <SignInButton>Sign in</SignInButton>
-      </Show>
-      <Show when="signed-in">
-        <SignOutButton>Sign out</SignOutButton>
-      </Show>
-      <UserButton/>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/problems" element={isSignedIn ? <ProblemsPage /> : <Navigate to="/" />} />
+      </Routes>
+      <Toaster />
     </>
   )
 }
