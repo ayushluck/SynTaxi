@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useUser } from '@clerk/react';
 import HomePage from './pages/HomePage';
 import ProblemsPage from './pages/ProblemsPage';
+import DashboardPage from './pages/DashboardPage';
 import { Toaster } from 'react-hot-toast';
 function App() {
   const { isSignedIn , isLoaded } = useUser();
