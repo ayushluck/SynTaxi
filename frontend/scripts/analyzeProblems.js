@@ -1,61 +1,49 @@
-const fs = require('fs');
-const path = require('path');
-const file = path.join(__dirname, '..', 'src', 'data', 'problems.js');
-const text = fs.readFileSync(file, 'utf8');
-const re = /"(?<id>[^"]+)":\s*\{(?<body>[\s\S]*?)\n\s*\},/g;
-const keywordMap = {
-    'Linked List': /linked list|ListNode|linked-list|add-two-numbers|reverse-linked-list/i,
-    'Binary Search': /binary search|binary-search|search-in-rotated|median-of-two-sorted-arrays|peak-index|find-peak/i,
-    'Two Pointers': /two pointers|two-pointer|two-sum|two-sum-ii|reverse-string|container-with-most-water/i,
-    'Sliding Window': /sliding window|minimum-window|longest-substring|subarray|window/i,
-    'Dynamic Programming': /dynamic programming|\bdp\b|climbing-stairs|house-robber|longest-increasing-subsequence|coin-change/i,
-    'Graph': /graph|number-of-islands|clone-graph|course-schedule|topological|\bdfs\b|\bbfs\b/i,
-    'Stack': /stack|min-stack|evaluate-reverse-polish|implement-stack|valid-parentheses/i,
-    'Queue': /queue|implement-queue|rotting-oranges|rotten/i,
-    'Hash Table': /hash|hash table|hash map|two-sum|contains-duplicate|group-anagrams|top-k/i,
-    'Heap': /heap|kth-largest|top k|priority queue/i,
-    'Math': /math|roman|integer-to-roman|roman-to-integer|atoi/i,
-    'Matrix': /matrix|rotate-image|spiral-matrix|game-of-life/i,
-    'Backtracking': /backtracking|n-queens|word-search|combination-sum/i,
-    'Greedy': /greedy|gas-station|jump|best-time-to-buy-sell-stock/i,
-};
+import { LANGUAGE_CONFIG, PROBLEMS } from "../src/data/problems.js";
 
-const results = [];
-let m;
-while ((m = re.exec(text)) !== null) {
-    const id = m.groups.id;
-    const body = m.groups.body;
-    const titleMatch = body.match(/title:\s*"([^"]+)"/);
-    const title = titleMatch ? titleMatch[1] : "";
-    const difficultyMatch = body.match(/difficulty:\s*"([^"]+)"/);
-    const difficulty = difficultyMatch ? difficultyMatch[1] : "";
-    const categoryMatch = body.match(/category:\s*"([^"]+)"/);
-    const category = categoryMatch ? categoryMatch[1] : "";
-    const descMatch = body.match(/description:\s*\{([\s\S]*?)\}/);
-    let descText = '';
-    if (descMatch) {
-        const t = descMatch[1].match(/text:\s*"([^"]+)"/);
-        descText = t ? t[1] : '';
+const languages = Object.keys(LANGUAGE_CONFIG);
+const issues = [];
+const seenIds = new Set();
+
+for (const [key, problem] of Object.entries(PROBLEMS)) {
+  if (key !== problem.id) issues.push(`${key}: key does not match id "${problem.id}"`);
+  if (seenIds.has(problem.id)) issues.push(`${key}: duplicate id "${problem.id}"`);
+  seenIds.add(problem.id);
+
+  if (!problem.title) issues.push(`${key}: missing title`);
+  if (!["Easy", "Medium", "Hard"].includes(problem.difficulty)) {
+    issues.push(`${key}: invalid difficulty "${problem.difficulty}"`);
+  }
+  if (!problem.category) issues.push(`${key}: missing category`);
+  if (!problem.description?.text) issues.push(`${key}: missing description.text`);
+  if (!Array.isArray(problem.description?.notes)) issues.push(`${key}: notes must be an array`);
+  if (!Array.isArray(problem.examples) || problem.examples.length === 0) {
+    issues.push(`${key}: at least one example is required`);
+  }
+  if (!Array.isArray(problem.constraints)) issues.push(`${key}: constraints must be an array`);
+
+  for (const language of languages) {
+    if (!problem.starterCode?.[language]?.trim()) {
+      issues.push(`${key}: missing ${language} starter code`);
     }
+  }
 
-    const issues = [];
-    if (!title) issues.push('missing title');
-    if (!difficulty) issues.push('missing difficulty');
-    else if (!['Easy', 'Medium', 'Hard'].includes(difficulty)) issues.push('unexpected difficulty: ' + difficulty);
-    if (!category) issues.push('missing category');
-    if (!descText) issues.push('missing description.text');
+  const isValidExpectedOutput = (expectedOutput) =>
+    typeof expectedOutput === "string" ||
+    (Array.isArray(expectedOutput) && expectedOutput.every((output) => typeof output === "string"));
 
-    const existingTopics = category ? category.split('•').map(s => s.trim()).filter(Boolean) : [];
+  const validExpectedOutput =
+    isValidExpectedOutput(problem.expectedOutput) ||
+    (problem.expectedOutput &&
+      languages.every((language) => isValidExpectedOutput(problem.expectedOutput[language])));
 
-    const suggestions = new Set();
-    const hay = (title + ' ' + category + ' ' + descText).toLowerCase();
-    for (const [topic, pattern] of Object.entries(keywordMap)) {
-        if (pattern.test(hay)) suggestions.add(topic);
-    }
-    // remove existing
-    for (const t of existingTopics) if (suggestions.has(t)) suggestions.delete(t);
-
-    results.push({ id, title, difficulty, category, existingTopics, suggestedTopics: Array.from(suggestions).sort(), issues });
+  if (!validExpectedOutput) issues.push(`${key}: invalid expectedOutput`);
 }
 
-console.log(JSON.stringify(results, null, 2));
+const report = {
+  problems: Object.keys(PROBLEMS).length,
+  languages,
+  issues,
+};
+
+console.log(JSON.stringify(report, null, 2));
+if (issues.length > 0) process.exitCode = 1;

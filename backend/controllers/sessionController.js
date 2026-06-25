@@ -5,13 +5,17 @@ export async function createSession(req, res) {
         const { problem, difficulty } = req.body;
         const userId = req.user._id;
         const clerkId = req.user.clerkId;
-        if (!problem || !difficulty) {
+        if (!problem || typeof difficulty !== "string") {
             return res.status(400).json({ error: "Problem and difficulty are required" });
+        }
+        const normalizedDifficulty = difficulty.toLowerCase();
+        if (!["easy", "medium", "hard"].includes(normalizedDifficulty)) {
+            return res.status(400).json({ error: "Difficulty must be easy, medium, or hard" });
         }
         const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         const session = new Session({
             problem,
-            difficulty,
+            difficulty: normalizedDifficulty,
             host: userId,
             callId
         });
@@ -27,7 +31,9 @@ export async function createSession(req, res) {
             members: [clerkId]
         });
         await channel.create();
-        res.status(201).json({ message: "Session created successfully", session: session });
+        await session.save();
+
+        res.status(201).json({ message: "Session created successfully", session });
     } catch (error) {
         console.error("Error creating session:", error);
         res.status(500).json({ error: "Failed to create session" });
@@ -47,7 +53,7 @@ export async function getActiveSession(_, res) {
 export async function getMyRecentSessions(req, res) {
     try{
         const userId = req.user._id;
-        await Session.find({
+        const sessions = await Session.find({
             status:"completed",
             $or:[{host:userId},{participants:userId}]
         }).sort({createdAt:-1}).limit(20).populate("host","name profileImage email clerkId");
@@ -81,15 +87,24 @@ export async function joinSession(req, res) {
         if(!session){
             return res.status(404).json({error:"Session not found"});
         }
-        // Add user to session participants
-        if(session.participants){
+        if (session.status !== "active") {
+            return res.status(400).json({error:"Session is no longer active"});
+        }
+        if (session.host.toString() === userId.toString()) {
+            return res.status(400).json({error:"Host is already part of the session"});
+        }
+        if (session.participants?.toString() === userId.toString()) {
             return res.status(400).json({error:"User already joined the session"});
         }
+        if (session.participants) {
+            return res.status(409).json({error:"Session is already full"});
+        }
+
         session.participants = userId;
         await session.save();
 
-        const chanel = chatClient.channel("messaging", session.callId);
-        await chanel.addMembers([clerkId]);
+        const channel = chatClient.channel("messaging", session.callId);
+        await channel.addMembers([clerkId]);
         res.status(200).json({message:"Successfully joined session", session});
     }catch(error){
         console.error("Error joining session:", error);

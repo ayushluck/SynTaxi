@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
-
 import { PROBLEMS } from "../data/problems";
 import { ChevronRightIcon, Code2Icon, FilterIcon, SearchIcon, XIcon } from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
@@ -55,7 +54,6 @@ function ProblemsPage() {
     setSelectedTopic("All");
     setSelectedDifficulty("All");
   };
-
   return (
     <div className="min-h-screen bg-base-200">
       <Navbar />
