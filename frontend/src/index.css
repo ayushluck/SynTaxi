@@ -10,3 +10,25 @@
     cursor: pointer;
   }
 }
+
+.problem-workspace,
+.code-workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  .problem-workspace {
+    grid-template-columns:
+      minmax(300px, var(--problem-panel-size))
+      8px
+      minmax(420px, var(--code-panel-size));
+  }
+
+  .code-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows:
+      minmax(260px, var(--editor-panel-size))
+      8px
+      minmax(130px, var(--output-panel-size));
+  }
+}
