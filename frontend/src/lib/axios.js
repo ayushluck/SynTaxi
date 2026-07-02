@@ -1,18 +1,5 @@
 import axios from 'axios';
-
-const getClerkToken = async () => {
-    if (typeof window === 'undefined') return null;
-
-    try {
-        const clerk = window.Clerk;
-        if (!clerk?.session) return null;
-
-        return await clerk.session.getToken();
-    } catch (error) {
-        console.warn('Unable to read Clerk token for API request', error);
-        return null;
-    }
-};
+import { getToken } from '@clerk/react';
 
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
@@ -20,11 +7,15 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use(async (config) => {
-    const token = await getClerkToken();
+    try {
+        const token = await getToken();
 
-    if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+    } catch (error) {
+        console.warn('Unable to read Clerk token for API request', error);
     }
 
     return config;

@@ -16,6 +16,8 @@ const app = express();
 const __dirname = path.resolve();
 const allowedOrigins = [ENV.CLIENT_URL, "http://localhost:5173", "http://localhost:3000"].filter(Boolean);
 
+app.set("trust proxy", 1);
+
 // middleware
 app.use(express.json());
 app.use(cors({
