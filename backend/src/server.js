@@ -36,6 +36,8 @@ app.use(clerkMiddleware()); // this adds auth to the request object for downstre
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/chat", chatRoutes);
+app.use("/sessions", sessionRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });

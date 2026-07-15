@@ -1,8 +1,13 @@
 import axios from 'axios';
 import { getToken } from '@clerk/react';
 
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const apiBaseUrl = rawApiBaseUrl.replace(/\/$/, '').endsWith('/api')
+    ? rawApiBaseUrl.replace(/\/$/, '')
+    : `${rawApiBaseUrl.replace(/\/$/, '')}/api`;
+
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+    baseURL: apiBaseUrl,
     withCredentials: true,
 });
 
